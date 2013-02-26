@@ -1,0 +1,40 @@
+<?php
+function rating_module_schema(){
+	$schema['rating_module'] = array(
+				'description' => 'The table for multi axes rating module',
+				'fields' => array(
+							'id' => array(
+									'description' => 'the primary key identifier for the table',
+									'type' =>'serial',
+									'not null' => 'true',
+							),
+							'nid' => array(
+												'description' => 'the nid for the table',
+												'type' =>'int',
+												//'not null' => 'true',
+							),			
+							'quality' => array(
+												'description' => 'this is quality field',
+												'type' => 'int',
+												'length' => 10,
+							),	
+							'cost' => array(
+											'description' => 'This is cost field',
+											'type' => 'int',
+											'length' =>10,
+							),
+							'hospitality' => array(
+									'description' => 'This is hospitality field',
+									'type' => 'int',
+									'length' =>10,
+							),
+							'comment' => array(
+									'description' => 'This is comment field',
+									'type' => 'varchar',
+									'length' =>255,
+							),
+						),
+				'primary key' => array('id'),
+	);
+	return $schema;
+}

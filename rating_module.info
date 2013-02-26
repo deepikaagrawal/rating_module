@@ -1,0 +1,5 @@
+name = Rating Module
+description = This is multi axes rating module
+core = 7.x
+package = custom
+scripts[] = rating.js

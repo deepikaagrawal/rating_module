@@ -1,0 +1,141 @@
+<?php
+//drupal_add_js(drupal_get_path('module', 'rating_module') . '/rating.js');
+
+/*************************Implementing basic form******************************/
+
+function rating_module_form($form,&$form_state){
+	$form = array();
+	$nid = arg(1);
+	/*$form['recent_entry'] = array(
+			"#prefix" => "<div id='test-ajax'>",
+			);*/
+	$form['nid'] = array(
+					'#type' => 'hidden',
+					'#value' => $nid,
+					'#attributes' => array('name' => 'nid'),
+			);
+	$form['quality'] = array(
+							'#type' => 'fivestar',
+							'#title' => 'How was quality',
+							'#size' => 10,
+							'#maxlength' => 10,
+							'#required' => true,	
+					);
+	$form['cost'] = array(
+							'#type' => 'fivestar',
+							'#title' => 'what is cost',
+							'#size' => 10,
+							'#maxlength' => 10,
+							'#required' => true,
+					);
+	$form['hospitality'] = array(
+							'#type' => 'fivestar',
+							'#title' => 'How was hopitality',
+							'#size' => 10,
+							'#maxlength' => 10,
+							'#required' => true,
+					);
+	$form['comment'] = array(
+							'#type' => 'textarea',
+							'#title' => 'What is your comment',
+							'#size' => 10,
+							'#maxlength' => 100,
+							'#required' => true,
+					);
+	$form['submit'] = array(
+							'#type' => 'submit',
+							'#value' => t('Click Me'),
+							//'#suffix' => '</div>',
+							'#ajax' => array(
+									"callback" => "rating_module_form_callback",
+									"wrapper" => "test-ajax1", 
+									"effect" => "fade"
+									)
+					);
+					
+	return $form;
+}
+
+/**************Declaring Block**********/
+function rating_module_block_info(){
+	$blocks = array();
+	$blocks['rating_modules'] = array(
+				'info' => 'This is multiaxes rating module',
+	);
+	$blocks['average_modules'] = array(
+				'info' => 'Average rating block'
+	);
+	return $blocks;
+}
+
+/**************Assigning form view to block**********/
+function rating_module_block_view($delta = ''){
+	switch($delta){
+		case 'rating_modules':
+			$block['subject'] = 'This is rating block';
+			$block['content'] =  drupal_get_form('rating_module_form');
+			break;
+		case 'average_modules' :
+			$block['subject'] = 'This is average rating block';
+			
+			$out = array('rating'=> rating_module_content(arg(1)), 'stars' => 5, 'tags'=>"Rating");
+			
+			$dis = theme('fivestar_static', $out);
+			
+			$block['content'] = "<div id='test-ajax1'>". $dis ."</div>";
+			break;			
+	}
+	return $block;
+}
+
+/*******************Submitting form********************************/
+function rating_module_form_submit($form,&$form_state){
+	$result = array(
+					'nid' => $form_state['values']['nid'],
+					'quality' => $form_state['values']['quality'],
+					'cost' => $form_state['values']['cost'],
+					'hospitality' => $form_state['values']['hospitality'],
+					'comment' => $form_state['values']['comment'],
+			);
+	drupal_write_record('rating_module',$result);
+	//drupal_set_message(t('Record Inserted'));
+	/*$form_state['input'] = array();
+	$form_state['rebuild'] = TRUE;*/
+	//$form_state['i_submitted_this'] = TRUE;
+	
+}
+/*************************Displaying result block**********************/
+function rating_module_content($nid){
+	$cost_sum = $quality_sum = $hospitality_sum = 0;
+	$counter = 0;
+	$query = db_select('rating_module','rm')
+					->fields('rm',array('id','quality','cost','hospitality'))
+					->condition('nid',$nid)
+					->execute();
+	while($record = $query->fetchAssoc())
+	{
+		$cost_sum += $record['cost'];
+		$quality_sum += $record['quality'];
+		$hospitality_sum += $record['hospitality'];
+		$counter++;
+	}
+	if($counter)
+	{
+		$cost_avg = $cost_sum / $counter; 					//print $cost_avg;
+		$quality_avg = $quality_sum / $counter; 				//print $quality_avg;
+		$hospitality_avg = $hospitality_sum / $counter;		//print $hospitality_avg;
+		$total = ($cost_avg + $quality_avg + $hospitality_avg) / 3;
+	}
+	else
+	{
+		$total = 0;
+	}	
+	return $total;	
+}
+function rating_module_form_callback($form,&$form_state){
+	$nid = $form_state['values']['nid'];
+	$out = array('rating'=> rating_module_content($nid), 'stars' => 5, 'tags'=>"Rating");
+	$dis = theme('fivestar_static', $out);
+	$output = "<div id='test-ajax1'>".$dis ."</div>";
+	return $output;
+}
